@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GDRS — Laporan Prioritas</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    .two-col { display: grid; grid-template-columns: 1fr 320px; gap: 20px; }
+    .detail-scroll { max-height: calc(100vh - 160px); overflow-y: auto; }
+    .ai-bar-track { height: 6px; background: #e5e9ef; border-radius: 99px; overflow: hidden; margin-top: 6px; }
+    .ai-bar-fill  { height: 100%; border-radius: 99px; width: 0; transition: width .6s ease; }
+  </style>
+</head>
+<body class="layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <h1>GDRS</h1>
+      <p>Green Dormitory Reporting System</p>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="dashboardadmin.html" class="nav-link">
+        <i class="fa-solid fa-table-cells-large"></i> Dashboard
+      </a>
+      <a href="laporanprioritas.html" class="nav-link active">
+        <i class="fa-solid fa-circle-exclamation"></i> Laporan Prioritas
+      </a>
+      <hr class="nav-divider">
+      <a href="Pengaturanakunadmin.html" class="nav-link">
+        <i class="fa-solid fa-gear"></i> Pengaturan Akun
+      </a>
+    </nav>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-notif">
+        <i class="fa-solid fa-bell"></i>
+        <span>Notifikasi</span>
+      </div>
+      <div class="topbar-divider"></div>
+      <a href="Pengaturanakunadmin.html" class="topbar-user">
+        <div class="topbar-user-info">
+          <span class="topbar-user-name js-user-name">—</span>
+          <span class="topbar-user-role js-user-role">Admin</span>
+        </div>
+        <div class="topbar-avatar"><i class="fa-solid fa-user"></i></div>
+      </a>
+    </header>
+
+    <div class="page-content">
+      <h2 class="page-title">Laporan Prioritas</h2>
+
+      <!-- Stat Card -->
+      <div class="stat-grid" style="margin-bottom:24px;">
+        <div class="stat-card stat-orange">
+          <div>
+            <div class="stat-label">Total Laporan Prioritas</div>
+            <div class="stat-value" id="stat-prioritas">0</div>
+          </div>
+          <i class="fa-solid fa-circle-exclamation stat-icon"></i>
+        </div>
+      </div>
+
+      <!-- Table + Detail -->
+      <div class="two-col">
+        <!-- Table Card -->
+        <div class="card" style="padding:24px;">
+          <div class="card-header"><span class="accent"><i class="fa-solid fa-star"></i></span> Daftar Laporan Prioritas</div>
+          <hr class="card-divider">
+          <div class="table-wrapper">
+            <table class="gdrs-table">
+              <thead>
+                <tr>
+                  <th>ID Laporan</th>
+                  <th>Status</th>
+                  <th>Tanggal</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="tabel-prioritas">
+                <tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:32px;">Memuat data...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Detail Panel -->
+        <div class="card" style="padding:24px;">
+          <div class="card-header"><span class="accent"><i class="fa-solid fa-file-lines"></i></span> Detail Laporan</div>
+          <hr class="card-divider">
+          <div id="detail-panel" class="detail-scroll">
+            <p class="detail-empty">Pilih laporan di tabel untuk melihat detail.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="shared.js"></script>
+  <script>
+    GDRS.requireAdmin();
+    GDRS.loadAdminHeader();
+    initAdminNotif();
+
+    let allPriority = [];
+
+    async function renderPriority() {
+      try {
+        const data = await GDRS.api('get_priority_reports');
+        allPriority = Array.isArray(data) ? data : [];
+        document.getElementById('stat-prioritas').textContent = allPriority.length;
+
+        const tbody = document.getElementById('tabel-prioritas');
+        if (!allPriority.length) {
+          tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:32px;">Tidak ada laporan prioritas.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = allPriority.map(r => {
+          const dateStr = new Date(r.created_at).toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'});
+          const cls = { 'Selesai':'badge badge-selesai','Diproses':'badge badge-diproses','Menunggu':'badge badge-menunggu' };
+          return `
+            <tr>
+              <td><span class="report-id">#${r.report_id}</span></td>
+              <td><span class="${cls[r.status]||'badge badge-menunggu'}">${r.status||'Menunggu'}</span></td>
+              <td style="color:var(--text-secondary);font-size:12.5px;">${dateStr}</td>
+              <td>
+                <button onclick="lihatDetail(${r.report_id})" class="btn btn-sm btn-info">
+                  <i class="fa-solid fa-eye"></i> Lihat
+                </button>
+              </td>
+            </tr>`;
+        }).join('');
+      } catch (_) { showToast('Gagal memuat laporan prioritas.', 'error'); }
+    }
+
+    function lihatDetail(id) {
+      const r = allPriority.find(x => x.report_id == id);
+      if (!r) return;
+      const cls = { 'Selesai':'badge badge-selesai','Diproses':'badge badge-diproses','Menunggu':'badge badge-menunggu' };
+
+      const sevMap = {
+        'Rendah': { color: 'var(--green-accent)',  width: '30%' },
+        'Sedang': { color: 'var(--orange-accent)', width: '62%' },
+        'Tinggi': { color: 'var(--red-accent)',    width: '92%' },
+      };
+      const sev = sevMap[r.severity_level] || sevMap['Sedang'];
+
+      document.getElementById('detail-panel').innerHTML = `
+        <div class="detail-section">
+          <div class="detail-label">Deskripsi Masalah</div>
+          <div class="detail-desc">${r.description}</div>
+        </div>
+        <hr class="card-divider">
+        <div class="detail-section">
+          <div class="detail-label">Estimasi AI</div>
+          <div class="detail-value" style="font-style:italic;color:var(--text-secondary);">
+            ${r.ai_estimation || 'Belum ada estimasi'}
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;margin-bottom:2px;">
+            <span style="font-size:11px;color:var(--text-muted);">Tingkat keparahan</span>
+            <span style="font-size:11px;font-weight:700;color:var(--text-secondary);">${r.severity_level || '—'}</span>
+          </div>
+          <div class="ai-bar-track">
+            <div class="ai-bar-fill" id="ai-bar" style="background:${sev.color}"></div>
+          </div>
+        </div>
+        <hr class="card-divider">
+        <div class="detail-section">
+          <div class="detail-label">Status</div>
+          <div style="margin-top:4px;"><span class="${cls[r.status]||'badge badge-menunggu'}">${r.status||'Menunggu'}</span></div>
+        </div>
+        <div class="detail-section">
+          <div class="detail-label">Penanggung Jawab</div>
+          <div class="detail-value">${r.person_in_charge || '—'}</div>
+        </div>
+        <hr class="card-divider">
+        <button onclick="cabutPrioritas(${r.report_id})" class="btn btn-danger btn-block">
+          <i class="fa-solid fa-star-half-stroke"></i> Cabut Status Prioritas
+        </button>
+      `;
+   
+      setTimeout(() => {
+        const bar = document.getElementById('ai-bar');
+        if (bar) bar.style.width = sev.width;
+      }, 50);
+    }
+
+    async function cabutPrioritas(id) {
+      if (!confirm('Yakin ingin mencabut status prioritas laporan ini?')) return;
+      try {
+        const data = await GDRS.post('toggle_priority', { report_id: id });
+        if (data.success) {
+          showToast('Status prioritas berhasil dicabut.', 'success');
+          await renderPriority();
+          document.getElementById('detail-panel').innerHTML = '<p class="detail-empty">Pilih laporan di tabel untuk melihat detail.</p>';
+        } else {
+          showToast('Gagal memperbarui status.', 'error');
+        }
+      } catch (_) { showToast('Gagal terhubung ke server.', 'error'); }
+    }
+
+    renderPriority();
+  </script>
+</body>
+</html>

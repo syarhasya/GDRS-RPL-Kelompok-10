@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GDRS — Dashboard Mahasiswa</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    .two-col { display: grid; grid-template-columns: 1fr 320px; gap: 20px; }
+    .detail-scroll { max-height: calc(100vh - 160px); overflow-y: auto; }
+    .ai-bar-track { height: 6px; background: #e5e9ef; border-radius: 99px; overflow: hidden; margin-top: 6px; }
+    .ai-bar-fill  { height: 100%; border-radius: 99px; width: 0; transition: width .6s ease; }
+  </style>
+</head>
+<body class="layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <h1>GDRS</h1>
+      <p>Green Dormitory Reporting System</p>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="Dashboardstudent.html" class="nav-link active">
+        <i class="fa-solid fa-table-cells-large"></i> Dashboard
+      </a>
+      <a href="Buatlaporan.html" class="nav-link">
+        <i class="fa-regular fa-pen-to-square"></i> Buat Laporan Baru
+      </a>
+      <hr class="nav-divider">
+      <a href="Pengaturanakun.html" class="nav-link">
+        <i class="fa-solid fa-gear"></i> Pengaturan Akun
+      </a>
+    </nav>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="topbar-notif">
+        <i class="fa-solid fa-bell"></i>
+        <span>Notifikasi</span>
+      </div>
+      <div class="topbar-divider"></div>
+      <a href="Pengaturanakun.html" class="topbar-user">
+        <div class="topbar-user-info">
+          <span class="topbar-user-name js-user-name">—</span>
+          <span class="topbar-user-role js-user-role">Student</span>
+        </div>
+        <div class="topbar-avatar"><i class="fa-solid fa-user"></i></div>
+      </a>
+    </header>
+
+    <!-- Content -->
+    <div class="page-content">
+      <h2 class="page-title">Dashboard</h2>
+
+      <!-- Stat Cards -->
+      <div class="stat-grid" style="margin-bottom:24px;">
+        <div class="stat-card stat-green">
+          <div>
+            <div class="stat-label">Laporan Masuk</div>
+            <div class="stat-value" id="stat-masuk">0</div>
+          </div>
+          <i class="fa-solid fa-briefcase stat-icon"></i>
+        </div>
+        <div class="stat-card stat-cyan">
+          <div>
+            <div class="stat-label">Laporan Selesai</div>
+            <div class="stat-value" id="stat-selesai">0</div>
+          </div>
+          <i class="fa-solid fa-circle-check stat-icon"></i>
+        </div>
+        <div class="stat-card stat-orange">
+          <div>
+            <div class="stat-label">Laporan Prioritas</div>
+            <div class="stat-value" id="stat-prioritas">0</div>
+          </div>
+          <i class="fa-solid fa-circle-exclamation stat-icon"></i>
+        </div>
+      </div>
+
+      <!-- Table + Detail -->
+      <div class="two-col">
+        <!-- Table Card -->
+        <div class="card" style="padding:24px;">
+          <div class="card-header"><span class="accent"><i class="fa-solid fa-list-ul"></i></span> Riwayat Laporan</div>
+          <hr class="card-divider">
+          <div class="table-wrapper">
+            <table class="gdrs-table">
+              <thead>
+                <tr>
+                  <th>ID Laporan</th>
+                  <th>Status</th>
+                  <th>Tanggal</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="tabel-laporan">
+                <tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:32px;">Memuat data...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Detail Panel Card -->
+        <div class="card" style="padding:24px;">
+          <div class="card-header"><span class="accent"><i class="fa-solid fa-file-lines"></i></span> Detail Laporan</div>
+          <hr class="card-divider">
+          <div id="detail-panel" class="detail-scroll">
+            <p class="detail-empty">Pilih laporan di tabel untuk melihat detail.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="shared.js?v=2"></script>
+  <script>
+    GDRS.requireStudent();
+    GDRS.loadStudentHeader();
+    initStudentNotif();
+
+    let dbReports = [];
+
+    async function fetchReports() {
+      const id = GDRS.getStudentId();
+      try {
+        const data = await GDRS.api('get_reports_student', { id });
+        dbReports = Array.isArray(data) ? data : [];
+        renderDashboard();
+      } catch (err) {
+        showToast('Gagal memuat data laporan.', 'error');
+      }
+    }
+
+    function statusBadge(status) {
+      const map = {
+        'Selesai':  'badge badge-selesai',
+        'Diproses': 'badge badge-diproses',
+        'Menunggu': 'badge badge-menunggu',
+      };
+      return `<span class="${map[status] || 'badge badge-menunggu'}">${status || 'Menunggu'}</span>`;
+    }
+
+    function fmtDate(d) {
+      return new Date(d).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+
+    function renderDashboard() {
+      document.getElementById('stat-masuk').textContent    = dbReports.length;
+      document.getElementById('stat-selesai').textContent  = dbReports.filter(r => r.status === 'Selesai').length;
+      document.getElementById('stat-prioritas').textContent = dbReports.filter(r => r.is_priority === true || r.is_priority === 't').length;
+
+      const tbody = document.getElementById('tabel-laporan');
+      if (!dbReports.length) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:32px;">Belum ada laporan.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = dbReports.map(r => `
+        <tr>
+          <td><span class="report-id">#${r.report_id}</span></td>
+          <td>${statusBadge(r.status)}</td>
+          <td style="color:var(--text-secondary);font-size:12.5px;">${fmtDate(r.created_at)}</td>
+          <td>
+            <button onclick="lihatDetail(${r.report_id})" class="btn btn-sm btn-info">
+              <i class="fa-solid fa-eye"></i> Lihat
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function lihatDetail(id) {
+      const r = dbReports.find(x => x.report_id == id);
+      if (!r) return;
+      const panel = document.getElementById('detail-panel');
+      const prio = r.is_priority === true || r.is_priority === 't'
+        ? `<span class="badge badge-prioritas"><i class="fa-solid fa-star"></i> Prioritas</span>`
+        : `<span class="badge badge-menunggu">Normal</span>`;
+
+      const sevMap = {
+        'Rendah': { color: 'var(--green-accent)',  width: '30%' },
+        'Sedang': { color: 'var(--orange-accent)', width: '62%' },
+        'Tinggi': { color: 'var(--red-accent)',    width: '92%' },
+      };
+      const sev = sevMap[r.severity_level] || sevMap['Sedang'];
+
+      panel.innerHTML = `
+        <div class="detail-section">
+          <div class="detail-label">Deskripsi Masalah</div>
+          <div class="detail-desc">${r.description}</div>
+        </div>
+        <hr class="card-divider">
+        <div class="detail-section">
+          <div class="detail-label">Estimasi AI</div>
+          <div class="detail-value" style="font-style:italic;color:var(--text-secondary);">
+            ${r.ai_estimation || 'Belum ada estimasi'}
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;margin-bottom:2px;">
+            <span style="font-size:11px;color:var(--text-muted);">Tingkat keparahan</span>
+            <span style="font-size:11px;font-weight:700;color:var(--text-secondary);">${r.severity_level || '—'}</span>
+          </div>
+          <div class="ai-bar-track">
+            <div class="ai-bar-fill" id="ai-bar" style="background:${sev.color}"></div>
+          </div>
+        </div>
+        <hr class="card-divider">
+        <div class="detail-section">
+          <div class="detail-label">Status</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
+            ${statusBadge(r.status)} ${prio}
+          </div>
+        </div>
+        <div class="detail-section">
+          <div class="detail-label">Penanggung Jawab</div>
+          <div class="detail-value">${r.person_in_charge || '—'}</div>
+        </div>
+      `;
+   
+      setTimeout(() => {
+        const bar = document.getElementById('ai-bar');
+        if (bar) bar.style.width = sev.width;
+      }, 50);
+    }
+
+    fetchReports();
+  </script>
+</body>
+</html>

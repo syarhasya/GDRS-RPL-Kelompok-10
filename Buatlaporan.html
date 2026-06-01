@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GDRS — Buat Laporan</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 18px;
+      border-radius: var(--radius-full);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: .3px;
+      transition: background .3s, color .3s;
+    }
+    .status-belum   { background:#fef2f2; color:#b91c1c; border:1px solid #fecaca; }
+    .status-draft   { background:#fff7ed; color:#c2410c; border:1px solid #fed7aa; }
+    .status-analisis{ background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; }
+    .status-terkirim{ background:#f0fdf4; color:#166534; border:1px solid #bbf7d0; }
+
+    .send-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 36px;
+      border-radius: var(--radius-lg);
+      font-weight: 700;
+      font-size: 15px;
+      border: none;
+      cursor: pointer;
+      font-family: var(--font-main);
+      transition: all .2s;
+    }
+    .send-btn.disabled {
+      background: #e5e9ef;
+      color: #9aa5b4;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+    .send-btn.ready {
+      background: linear-gradient(135deg, #00c853, #00b33c);
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(0,200,83,.3);
+    }
+    .send-btn.ready:hover { filter: brightness(1.06); }
+    .send-btn.ready:active { transform: scale(.97); }
+
+    .char-count { font-size: 12px; color: var(--text-muted); text-align: right; margin-top: 6px; }
+    .char-count.warn { color: #c2410c; }
+
+    /* AI result preview card */
+    .ai-result-card {
+      display: none;
+      background: var(--bg-card);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      padding: 20px 24px;
+      margin-top: 20px;
+      box-shadow: var(--shadow-sm);
+    }
+    .ai-result-card.visible { display: block; }
+    .ai-result-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 14px;
+    }
+    .ai-result-header i { color: var(--green-primary); }
+    .ai-sev-bar-track {
+      height: 8px;
+      background: #e5e9ef;
+      border-radius: 99px;
+      overflow: hidden;
+      margin: 8px 0 4px;
+    }
+    .ai-sev-bar-fill {
+      height: 100%;
+      border-radius: 99px;
+      width: 0;
+      transition: width .7s ease;
+    }
+    .sev-label {
+      font-size: 12px;
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      color: var(--text-muted);
+    }
+    .priority-alert {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #c2410c;
+      margin-top: 12px;
+    }
+    .priority-alert.visible { display: flex; }
+  </style>
+</head>
+<body class="layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <h1>GDRS</h1>
+      <p>Green Dormitory Reporting System</p>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="Dashboardstudent.html" class="nav-link">
+        <i class="fa-solid fa-table-cells-large"></i> Dashboard
+      </a>
+      <a href="Buatlaporan.html" class="nav-link active">
+        <i class="fa-regular fa-pen-to-square"></i> Buat Laporan Baru
+      </a>
+      <hr class="nav-divider">
+      <a href="Pengaturanakun.html" class="nav-link">
+        <i class="fa-solid fa-gear"></i> Pengaturan Akun
+      </a>
+    </nav>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-notif">
+        <i class="fa-solid fa-bell"></i>
+        <span>Notifikasi</span>
+      </div>
+      <div class="topbar-divider"></div>
+      <a href="Pengaturanakun.html" class="topbar-user">
+        <div class="topbar-user-info">
+          <span class="topbar-user-name js-user-name">—</span>
+          <span class="topbar-user-role js-user-role">Student</span>
+        </div>
+        <div class="topbar-avatar"><i class="fa-solid fa-user"></i></div>
+      </a>
+    </header>
+
+    <div class="page-content" style="max-width:760px;">
+      <h2 class="page-title">Buat Laporan Baru</h2>
+
+      <!-- Status indicator -->
+      <div style="margin-bottom:20px;">
+        <span id="status-pill" class="status-pill status-belum">
+          <i class="fa-solid fa-circle-xmark"></i>
+          <span id="status-text">Laporan belum disimpan</span>
+        </span>
+      </div>
+
+      <!-- Form card -->
+      <div class="card" style="padding:28px;">
+        <div class="card-header">
+          <span class="accent"><i class="fa-solid fa-file-pen"></i></span> Detail Laporan
+        </div>
+        <hr class="card-divider">
+
+        <div class="form-group">
+          <label class="form-label" for="input-deskripsi">Deskripsi Masalah</label>
+          <textarea
+            id="input-deskripsi"
+            class="form-input"
+            rows="8"
+            maxlength="2000"
+            placeholder="Contoh: Keran kamar mandi A-202 bocor dan menetes terus-menerus sejak kemarin sore..."
+          ></textarea>
+          <div class="char-count" id="char-count">0 / 2000 karakter</div>
+        </div>
+
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-top:20px;flex-wrap:wrap;">
+          <div style="display:flex;align-items:flex-start;gap:8px;max-width:420px;">
+            <i class="fa-solid fa-circle-info" style="color:var(--text-muted);font-size:13px;margin-top:2px;flex-shrink:0;"></i>
+            <p style="font-size:12.5px;color:var(--text-secondary);line-height:1.6;">
+              Laporan yang Anda buat akan dibaca oleh pengelola asrama. Harap buat laporan yang deskriptif, jelas, dan sopan agar dapat segera ditindaklanjuti.
+            </p>
+          </div>
+          <button id="btn-simpan" onclick="simpanDraft()" class="btn btn-secondary" style="flex-shrink:0;">
+            <i class="fa-regular fa-floppy-disk"></i> Simpan Draft
+          </button>
+        </div>
+      </div>
+
+      <!-- Preview hasil AI -->
+      <div class="ai-result-card" id="ai-result-card">
+        <div class="ai-result-header">
+          <i class="fa-solid fa-robot"></i> Hasil Analisis AI
+        </div>
+        <div class="detail-label" style="margin-bottom:6px;">Estimasi AI</div>
+        <div id="ai-estimation-text" class="detail-value" style="font-style:italic;color:var(--text-secondary);font-size:13.5px;"></div>
+        <div class="detail-label" style="margin-top:14px;margin-bottom:4px;">Tingkat Keparahan</div>
+        <div class="ai-sev-bar-track">
+          <div class="ai-sev-bar-fill" id="ai-sev-bar"></div>
+        </div>
+        <div class="sev-label">
+          <span>Rendah</span><span>Sedang</span><span>Tinggi</span>
+        </div>
+        <div class="priority-alert" id="priority-alert">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          Laporan ini ditandai sebagai <strong>Prioritas</strong> secara otomatis oleh AI karena tingkat keparahannya.
+        </div>
+      </div>
+
+      <!-- Tombol Kirim -->
+      <div style="margin-top:24px;">
+        <button id="btn-kirim" class="send-btn disabled" onclick="kirimKeDatabase()">
+          <i class="fa-solid fa-paper-plane"></i>
+          <span>Kirim &amp; Analisis Laporan</span>
+        </button>
+        <p style="font-size:12px;color:var(--text-muted);margin-top:8px;">
+          Simpan draft terlebih dahulu. Laporan akan dianalisis AI secara otomatis saat dikirim.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script src="shared.js?v=2"></script>
+  <script>
+    GDRS.requireStudent();
+    GDRS.loadStudentHeader();
+    initStudentNotif();
+
+    let isSaved = false;
+
+    const textarea  = document.getElementById('input-deskripsi');
+    const charCount = document.getElementById('char-count');
+
+    textarea.addEventListener('input', function () {
+      const len = this.value.length;
+      charCount.textContent = `${len} / 2000 karakter`;
+      charCount.classList.toggle('warn', len > 1800);
+      // Reset state if text changes after saving draft
+      if (isSaved) {
+        isSaved = false;
+        setPillState('belum');
+        document.getElementById('btn-kirim').className = 'send-btn disabled';
+        document.getElementById('ai-result-card').classList.remove('visible');
+      }
+    });
+
+    function setPillState(state) {
+      const pill = document.getElementById('status-pill');
+      const text = document.getElementById('status-text');
+      const cfg = {
+        belum:    { cls: 'status-belum',    icon: 'fa-circle-xmark',    label: 'Laporan belum disimpan' },
+        draft:    { cls: 'status-draft',    icon: 'fa-clock',           label: 'Draft tersimpan — siap dikirim' },
+        analisis: { cls: 'status-analisis', icon: 'fa-robot',           label: 'Menganalisis laporan...' },
+        terkirim: { cls: 'status-terkirim', icon: 'fa-circle-check',    label: 'Laporan berhasil dikirim!' },
+      };
+      const c = cfg[state] || cfg.belum;
+      pill.className = `status-pill ${c.cls}`;
+      pill.querySelector('i').className = `fa-solid ${c.icon}`;
+      text.textContent = c.label;
+    }
+
+    function simpanDraft() {
+      const desc = textarea.value.trim();
+      if (!desc) { showToast('Deskripsi masalah tidak boleh kosong.', 'error'); return; }
+      isSaved = true;
+      setPillState('draft');
+      document.getElementById('btn-kirim').className = 'send-btn ready';
+      showToast('Draft tersimpan. Klik "Kirim & Analisis Laporan" untuk mengirim.', 'success');
+    }
+
+    /**
+     * Maps severity_level string to bar width and colour.
+     * Rendah → 30% green | Sedang → 62% orange | Tinggi → 92% red
+     */
+    function severityStyle(level) {
+      const map = {
+        'Rendah': { width: '30%',  color: 'var(--green-accent)' },
+        'Sedang': { width: '62%',  color: 'var(--orange-accent)' },
+        'Tinggi': { width: '92%',  color: 'var(--red-accent)' },
+      };
+      return map[level] || map['Sedang'];
+    }
+
+    function showAiResult(ai) {
+      const card   = document.getElementById('ai-result-card');
+      const estEl  = document.getElementById('ai-estimation-text');
+      const barEl  = document.getElementById('ai-sev-bar');
+      const alertEl = document.getElementById('priority-alert');
+
+      estEl.textContent = ai.ai_estimation || '—';
+      card.classList.add('visible');
+
+      const sty = severityStyle(ai.severity_level);
+      barEl.style.background = sty.color;
+      // Animate after paint
+      setTimeout(() => { barEl.style.width = sty.width; }, 50);
+
+      alertEl.classList.toggle('visible', ai.is_priority === true);
+    }
+
+    async function kirimKeDatabase() {
+      if (!isSaved) return;
+      const desc      = textarea.value.trim();
+      const studentId = GDRS.getStudentId();
+      const btnKirim  = document.getElementById('btn-kirim');
+
+      // Tampilan Menganalisis
+      btnKirim.className = 'send-btn disabled';
+      btnKirim.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menganalisis...';
+      setPillState('analisis');
+
+      try {
+        const data = await GDRS.post('create_report', { student_id: studentId, description: desc });
+
+        if (data && data.success) {
+          setPillState('terkirim');
+          showToast('Laporan berhasil dikirim!', 'success');
+
+          // Tampilan hasil AI
+          if (data.ai_analysis) {
+            showAiResult(data.ai_analysis);
+            if (data.ai_analysis.is_priority) {
+              showToast('Laporan ditandai sebagai prioritas oleh AI.', 'info');
+            }
+          }
+
+          // Redirect
+          setTimeout(() => window.location.href = 'Dashboardstudent.html', 3000);
+        } else {
+          showToast('Gagal mengirim laporan.', 'error');
+          btnKirim.className = 'send-btn ready';
+          btnKirim.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Kirim &amp; Analisis Laporan';
+          setPillState('draft');
+        }
+      } catch (err) {
+        showToast('Gagal terhubung ke server.', 'error');
+        btnKirim.className = 'send-btn ready';
+        btnKirim.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Kirim &amp; Analisis Laporan';
+        setPillState('draft');
+      }
+    }
+  </script>
+</body>
+</html>

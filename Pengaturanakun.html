@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GDRS — Pengaturan Akun</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    .settings-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+    @media (max-width: 900px) { .settings-grid { grid-template-columns: 1fr 1fr; } }
+
+    .avatar-wrap {
+      width: 100px; height: 100px;
+      background: #dbeafe;
+      border-radius: 50%;
+      display: flex; align-items: flex-end; justify-content: center;
+      overflow: hidden;
+      border: 3px solid #bfdbfe;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .avatar-wrap i { font-size: 72px; color: #3b82f6; transform: translateY(12px); }
+
+    .pass-strength {
+      display: flex; gap: 4px; margin-top: 6px;
+    }
+    .pass-strength-bar {
+      height: 4px; flex: 1;
+      border-radius: 2px;
+      background: var(--border-light);
+      transition: background .3s;
+    }
+    .strength-1 .pass-strength-bar:nth-child(1) { background: #ef4444; }
+    .strength-2 .pass-strength-bar:nth-child(-n+2) { background: #f39c12; }
+    .strength-3 .pass-strength-bar:nth-child(-n+3) { background: #00b33c; }
+    .strength-4 .pass-strength-bar { background: #00c853; }
+    .strength-label { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+  </style>
+</head>
+<body class="layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <h1>GDRS</h1>
+      <p>Green Dormitory Reporting System</p>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="Dashboardstudent.html" class="nav-link">
+        <i class="fa-solid fa-table-cells-large"></i> Dashboard
+      </a>
+      <a href="Buatlaporan.html" class="nav-link">
+        <i class="fa-regular fa-pen-to-square"></i> Buat Laporan Baru
+      </a>
+      <hr class="nav-divider">
+      <a href="Pengaturanakun.html" class="nav-link active">
+        <i class="fa-solid fa-gear"></i> Pengaturan Akun
+      </a>
+    </nav>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-notif">
+        <i class="fa-solid fa-bell"></i>
+        <span>Notifikasi</span>
+      </div>
+      <div class="topbar-divider"></div>
+      <div class="topbar-user">
+        <div class="topbar-user-info">
+          <span class="topbar-user-name js-user-name">—</span>
+          <span class="topbar-user-role js-user-role">Student</span>
+        </div>
+        <div class="topbar-avatar"><i class="fa-solid fa-user"></i></div>
+      </div>
+    </header>
+
+    <div class="page-content" style="max-width:860px;">
+      <h2 class="page-title">Pengaturan Akun</h2>
+
+      <!-- Profil Section -->
+      <div class="card" style="padding:28px;margin-bottom:20px;">
+        <div class="card-header">
+          <span class="accent"><i class="fa-solid fa-circle-user"></i></span> Profil Pengguna
+        </div>
+        <hr class="card-divider">
+
+        <div style="display:flex;align-items:flex-start;gap:28px;flex-wrap:wrap;">
+          <!-- Avatar -->
+          <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
+            <div class="avatar-wrap">
+              <i class="fa-solid fa-user"></i>
+            </div>
+            <button class="btn btn-secondary btn-sm" style="font-size:11.5px;">
+              <i class="fa-solid fa-camera"></i> Ubah Foto
+            </button>
+          </div>
+
+          <!-- Fields -->
+          <div style="flex:1;min-width:280px;display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <div class="form-group" style="grid-column:span 2;">
+              <label class="form-label" for="inp-nama">Nama Lengkap</label>
+              <input type="text" id="inp-nama" class="form-input" placeholder="Nama lengkap">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="inp-email">Email</label>
+              <input type="email" id="inp-email" class="form-input" placeholder="email@contoh.com">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="inp-telp">Nomor Telepon</label>
+              <input type="tel" id="inp-telp" class="form-input" placeholder="+62 8xx-xxxx-xxxx">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Keamanan Section -->
+      <div class="card" style="padding:28px;margin-bottom:20px;">
+        <div class="card-header">
+          <span class="accent"><i class="fa-solid fa-lock"></i></span> Keamanan Akun
+        </div>
+        <hr class="card-divider">
+
+        <div class="settings-grid">
+          <div class="form-group">
+            <label class="form-label" for="inp-pass-lama">Password Saat Ini</label>
+            <input type="password" id="inp-pass-lama" class="form-input" placeholder="••••••••">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="inp-pass-baru">Password Baru</label>
+            <input type="password" id="inp-pass-baru" class="form-input" placeholder="Kosongkan jika tidak diubah" oninput="checkStrength(this.value)">
+            <div id="strength-bars" class="pass-strength" style="display:none;">
+              <div class="pass-strength-bar"></div>
+              <div class="pass-strength-bar"></div>
+              <div class="pass-strength-bar"></div>
+              <div class="pass-strength-bar"></div>
+            </div>
+            <div id="strength-label" class="strength-label"></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="inp-pass-konfirm">Konfirmasi Password Baru</label>
+            <input type="password" id="inp-pass-konfirm" class="form-input" placeholder="Kosongkan jika tidak diubah">
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <button onclick="simpanPerubahan()" class="btn btn-primary btn-lg">
+          <i class="fa-solid fa-floppy-disk"></i> Simpan Perubahan
+        </button>
+        <a href="indexstudent.html" onclick="return konfirmasiKeluar()" class="btn btn-danger btn-lg">
+          <i class="fa-solid fa-right-from-bracket"></i> Keluar
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script src="shared.js?v=2"></script>
+  <script>
+    GDRS.requireStudent();
+    GDRS.loadStudentHeader();
+    initStudentNotif();
+
+    async function muatData() {
+      const id = GDRS.getStudentId();
+      try {
+        const user = await GDRS.api('get_student_profile', { id });
+        if (user) {
+          document.getElementById('inp-nama').value  = user.full_name  || '';
+          document.getElementById('inp-email').value = user.email      || '';
+          document.getElementById('inp-telp').value  = user.phone_number || '';
+          document.querySelectorAll('.js-user-name').forEach(el => el.textContent = user.full_name);
+          document.querySelectorAll('.js-user-role').forEach(el => el.textContent = 'Student');
+        }
+      } catch (_) { showToast('Gagal memuat data profil.', 'error'); }
+    }
+
+    function checkStrength(val) {
+      const bars  = document.getElementById('strength-bars');
+      const label = document.getElementById('strength-label');
+      if (!val) { bars.style.display = 'none'; label.textContent = ''; bars.className = 'pass-strength'; return; }
+      bars.style.display = 'flex';
+      let score = 0;
+      if (val.length >= 8) score++;
+      if (/[A-Z]/.test(val)) score++;
+      if (/[0-9]/.test(val)) score++;
+      if (/[^A-Za-z0-9]/.test(val)) score++;
+      const labels = ['', 'Lemah', 'Sedang', 'Kuat', 'Sangat Kuat'];
+      bars.className = `pass-strength strength-${score}`;
+      label.textContent = labels[score] || '';
+    }
+
+    async function simpanPerubahan() {
+      const nama   = document.getElementById('inp-nama').value.trim();
+      const email  = document.getElementById('inp-email').value.trim();
+      const telp   = document.getElementById('inp-telp').value.trim();
+      const passLama    = document.getElementById('inp-pass-lama').value;
+      const passBaru    = document.getElementById('inp-pass-baru').value;
+      const passKonfirm = document.getElementById('inp-pass-konfirm').value;
+
+      if (!nama || !email) { showToast('Nama dan Email tidak boleh kosong.', 'error'); return; }
+
+      if (passBaru || passKonfirm) {
+        if (!passLama)              { showToast('Masukkan password saat ini untuk mengubah password.', 'error'); return; }
+        if (passBaru !== passKonfirm){ showToast('Password baru dan konfirmasi tidak cocok.', 'error'); return; }
+        if (passBaru.length < 6)   { showToast('Password baru minimal 6 karakter.', 'error'); return; }
+      }
+
+      const studentId = GDRS.getStudentId();
+
+      try {
+        const data = await GDRS.post('update_student', {
+          student_id: studentId,
+          full_name: nama,
+          email,
+          phone_number: telp,
+          current_password: passLama,
+          new_password: passBaru,
+        });
+
+        if (data.success) {
+          showToast('Profil berhasil diperbarui.', 'success');
+          document.querySelectorAll('.js-user-name').forEach(el => el.textContent = nama);
+          document.getElementById('inp-pass-lama').value    = '';
+          document.getElementById('inp-pass-baru').value    = '';
+          document.getElementById('inp-pass-konfirm').value = '';
+          checkStrength('');
+        } else {
+          showToast(data.message || 'Gagal memperbarui data. Periksa kembali password saat ini.', 'error');
+        }
+      } catch (_) { showToast('Gagal terhubung ke server.', 'error'); }
+    }
+
+    function konfirmasiKeluar() {
+      if (confirm('Yakin ingin keluar dari akun?')) {
+        localStorage.removeItem('studentId');
+        return true;
+      }
+      return false;
+    }
+
+    muatData();
+  </script>
+</body>
+</html>

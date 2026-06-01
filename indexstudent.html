@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GDRS — Login Mahasiswa</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    body {
+      background: linear-gradient(135deg, #00b33c 0%, #009930 40%, #d1fae5 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .login-card {
+      background: #fff;
+      border-radius: 24px;
+      padding: 40px 40px 36px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.18);
+    }
+    .brand-corner {
+      position: fixed;
+      top: 28px;
+      left: 28px;
+    }
+    .brand-corner h1 { font-size: 36px; font-weight: 700; color: #fff; letter-spacing: -1px; }
+    .brand-corner p  { font-size: 11px; color: rgba(255,255,255,.75); margin-top: 2px; }
+
+    .login-logo {
+      width: 56px; height: 56px;
+      background: linear-gradient(135deg, #00c853, #00b33c);
+      border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 20px;
+      box-shadow: 0 4px 14px rgba(0,179,60,.35);
+    }
+    .login-logo i { font-size: 24px; color: #fff; }
+    .login-title { text-align: center; font-size: 20px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; }
+    .login-sub   { text-align: center; font-size: 13px; color: var(--text-muted); margin-bottom: 28px; }
+
+    .input-wrap {
+      position: relative;
+      margin-bottom: 14px;
+    }
+    .input-wrap i {
+      position: absolute;
+      left: 14px; top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+    .input-wrap input {
+      width: 100%;
+      padding: 12px 14px 12px 40px;
+      border: 1.5px solid var(--border-light);
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-family: var(--font-main);
+      color: var(--text-primary);
+      background: #f8fafc;
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .input-wrap input:focus {
+      border-color: var(--green-primary);
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(0,179,60,.12);
+    }
+    .btn-login {
+      width: 100%;
+      background: linear-gradient(135deg, #00c853, #00b33c);
+      color: #fff;
+      font-weight: 700;
+      font-size: 15px;
+      padding: 13px;
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      margin-top: 6px;
+      box-shadow: 0 4px 14px rgba(0,179,60,.35);
+      transition: filter .15s, transform .1s;
+      font-family: var(--font-main);
+    }
+    .btn-login:hover { filter: brightness(1.06); }
+    .btn-login:active { transform: scale(.98); }
+    .login-alt {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .login-alt a { color: var(--green-primary); font-weight: 600; text-decoration: none; }
+    .login-alt a:hover { text-decoration: underline; }
+    .error-msg {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #b91c1c;
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      font-size: 13px;
+      margin-bottom: 12px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="brand-corner">
+    <h1>GDRS</h1>
+    <p>Green Dormitory Reporting System</p>
+  </div>
+
+  <div class="login-card">
+    <div class="login-logo"><i class="fa-solid fa-leaf"></i></div>
+    <div class="login-title">Selamat Datang</div>
+    <div class="login-sub">Masuk sebagai <strong>Mahasiswa</strong></div>
+
+    <div id="error-msg" class="error-msg">
+      <i class="fa-solid fa-triangle-exclamation"></i> <span id="error-text"></span>
+    </div>
+
+    <form id="form-login" novalidate>
+      <div class="input-wrap">
+        <i class="fa-regular fa-envelope"></i>
+        <input type="email" id="inp-email" placeholder="Alamat email" required autocomplete="email">
+      </div>
+      <div class="input-wrap">
+        <i class="fa-solid fa-lock"></i>
+        <input type="password" id="inp-pass" placeholder="Password" required autocomplete="current-password">
+      </div>
+      <button type="submit" class="btn-login" id="btn-masuk">
+        <span id="btn-text">Masuk</span>
+      </button>
+    </form>
+
+    <div class="login-alt">
+      Admin? <a href="indexadmin.html">Login sebagai Admin</a>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('form-login').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const email = document.getElementById('inp-email').value.trim();
+      const pass  = document.getElementById('inp-pass').value;
+      const errBox  = document.getElementById('error-msg');
+      const errText = document.getElementById('error-text');
+      const btn     = document.getElementById('btn-masuk');
+
+      errBox.style.display = 'none';
+      btn.disabled = true;
+      document.getElementById('btn-text').textContent = 'Memuat...';
+
+      try {
+        const res  = await fetch('http://localhost/gdrs/api.php?action=login_student', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password: pass }),
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          localStorage.setItem('studentId', data.user.student_id);
+          window.location.href = 'Dashboardstudent.html';
+        } else {
+          errText.textContent = data.message || 'Email atau password salah.';
+          errBox.style.display = 'block';
+        }
+      } catch (err) {
+        errText.textContent = 'Gagal terhubung ke server. Pastikan XAMPP Apache menyala.';
+        errBox.style.display = 'block';
+      } finally {
+        btn.disabled = false;
+        document.getElementById('btn-text').textContent = 'Masuk';
+      }
+    });
+  </script>
+</body>
+</html>
