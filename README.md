@@ -12,19 +12,19 @@ GDRS atau Green Dormitory Reporting System adalah sistem pelaporan permasalahan 
 
 ## Tampilan Fitur-fitur
 ### Login Student
-![Login Student](dokumentasi/LoginStudent.png)
+![Login Student](dokumentasi/LoginStudent.PNG)
 ### Login Admin
-![Login Admin](dokumentasi/LoginAdmin.png)
+![Login Admin](dokumentasi/LoginAdmin.PNG)
 ### Dashboard Student
-![Dashboard Student](dokumentasi/DashboardStudent.png)
+![Dashboard Student](dokumentasi/DashboardStudent.PNG)
 ### Dashboard Admin
-![Dashboard Admin](dokumentasi/DashboardAdmin.png)
+![Dashboard Admin](dokumentasi/DashboardAdmin.PNG)
 ### Pembuatan Laporan
-![Pembuatan Laporan](dokumentasi/BuatLaporan.png)
+![Pembuatan Laporan](dokumentasi/BuatLaporan.PNG)
 ### Laporan Prioritas
-![Laporan Prioritas](dokumentasi/LaporanPrioritas.png)
+![Laporan Prioritas](dokumentasi/LaporanPrioritas.PNG)
 ### Pengaturan Akun  
-![Pengaturan Akun](dokumentasi/Pengaturanakun.png)
+![Pengaturan Akun](dokumentasi/PengaturanAkun.PNG)
 
 
 ## Requirements
