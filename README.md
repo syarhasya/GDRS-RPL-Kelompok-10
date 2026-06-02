@@ -1,4 +1,3 @@
-<img width="1199" height="687" alt="image" src="https://github.com/user-attachments/assets/a322fc9e-741e-47b6-a16a-6398768ad73d" /><img width="1199" height="687" alt="image" src="https://github.com/user-attachments/assets/d9499c9b-4be7-4c29-aeb5-cccb244a0eac" /># GDRS-RPL-Kelompok-10
 Green Dormitory Reporting System
 
 ## Anggota Kelompok
