@@ -13,11 +13,11 @@ ini_set('display_errors', '0');
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(200); exit(); }
 
 // ── Database connection ────────────────────────────────────────────────────
-$host    = "localhost";
-$port    = "5432";
-$db_name = "gdrs";
-$db_user = "postgres";
-$db_pass = "54321root"; // Sesuaikan dengan password PostgreSQL Anda
+$host    = "localhost"; // default
+$port    = "5432"; // default
+$db_name = "<schema>"; // sesuaikan dengan nama schema dalam SQL, PASTIKAN NAMA FULL LOWERCASE
+$db_user = "postgres"; // default
+$db_pass = "<password>"; // Sesuaikan dengan password PostgreSQL Anda
 
 try {
     $conn = new PDO("pgsql:host=$host;port=$port;dbname=$db_name", $db_user, $db_pass);
@@ -93,9 +93,9 @@ function sanitizeAiText(string $raw): string {
  */
 function analisisLaporanDenganAI(string $teks_laporan): array
 {
-    $apiKey = "AQ.Ab8RN6KyhQ4yRq4QdITZsKSWzLMxK3VgRcdt-F9B05qoUPd82g";
+    $apiKey = "<API key>"; // isi dengan API key yang dibuat
 
-    $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent";
+    $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent"; // bisa diubah ke versi Gemini lain jika diinginkan
 
     $prompt = <<<'PROMPT'
 Anda adalah sistem analisis laporan pengaduan fasilitas asrama mahasiswa.
